@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import "./App.css";
+import "antd/dist/antd.min.css";
+import { Switch } from "antd";
 
 function Square(props) {
   return (
@@ -20,27 +22,30 @@ class Board extends Component {
       />
     );
   }
-
+  renderBoard() {
+    const items = []; //1
+    for (
+      let y = 0;
+      y < this.props.squares.length;
+      y = y + this.props.squares.length / 3
+    ) {
+      //2
+      items.push(this.renderRow(y));
+    }
+    return items;
+  }
+  renderRow(i) {
+    return <div className="board-row">{this.renderColumnsPerRow(i)}</div>;
+  }
+  renderColumnsPerRow(i) {
+    const items = [];
+    for (let y = 0; y < this.props.squares.length / 3; y++) {
+      items.push(this.renderSquare(i + y));
+    }
+    return items;
+  }
   render() {
-    return (
-      <div>
-        <div className="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
-        </div>
-      </div>
-    );
+    return <div>{this.renderBoard()}</div>;
   }
 }
 
@@ -48,6 +53,7 @@ class Game extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      isToggleOn: true,
       history: [
         {
           squares: Array(9).fill(null),
@@ -56,6 +62,7 @@ class Game extends Component {
       stepNumber: 0,
       xIsNext: true,
     };
+    this.handleToggle = this.handleToggle.bind(this);
   }
 
   handleClick(i) {
@@ -96,6 +103,12 @@ class Game extends Component {
     });
   }
 
+  handleToggle() {
+    this.setState((prevState) => ({
+      isToggleOn: !prevState.isToggleOn,
+    }));
+  }
+
   render() {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
@@ -105,13 +118,17 @@ class Game extends Component {
       const desc = move
         ? `Go to move #` + move + ` : ` + step.location
         : "Go to game start";
+      const changeClass = move === this.state.stepNumber ? "bold" : "";
       return (
         <li key={move}>
-          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+          <button className={changeClass} onClick={() => this.jumpTo(move)}>
+            {desc}
+          </button>
         </li>
       );
     });
 
+    const reversedItems = moves.map((item) => item).reverse();
     let status;
     if (winner) {
       status = "Winner: " + winner;
@@ -128,8 +145,9 @@ class Game extends Component {
           />
         </div>
         <div className="game-info">
+          <Switch onClick={this.handleToggle} />
           <div>{status}</div>
-          <ol>{moves}</ol>
+          <ol>{this.state.isToggleOn ? moves : reversedItems}</ol>
         </div>
       </div>
     );
